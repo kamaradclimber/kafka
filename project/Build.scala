@@ -52,7 +52,7 @@ object Dependencies {
   // Test
   val easymock = "org.easymock" % "easymock" % "3.0" % "test"
   val junit = "junit" % "junit" % "4.1" % "test"
-  val scalaTest = "org.scalatest" % "scalatest" % "1.2" % "test"
+  val scalaTest = "org.scalatest" %% "scalatest" % "1.8" % "test"
   val testDeps = Seq(easymock, junit, scalaTest) 
 
   // Apache Rat
