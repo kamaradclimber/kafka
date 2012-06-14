@@ -9,6 +9,7 @@ project/sbt_project_definition.iml
 .idea
 .svn
 .classpath
+rat.out
 *~
 *#
 .#*

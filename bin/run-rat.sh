@@ -17,13 +17,15 @@
 base_dir=$(dirname $0)/..
 rat_excludes_file=$base_dir/.rat-excludes
 
+rat_jar=$1
+
 if [ -z "$JAVA_HOME" ]; then
   JAVA="java"
 else
   JAVA="$JAVA_HOME/bin/java"
 fi
 
-rat_command="$JAVA -jar $base_dir/lib_managed/scala_2.8.0/compile/apache-rat-0.8.jar --dir $base_dir "
+rat_command="$JAVA -jar $rat_jar --dir $base_dir "
 
 for f in $(cat $rat_excludes_file);
 do

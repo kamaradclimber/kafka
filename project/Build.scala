@@ -52,6 +52,9 @@ object Dependencies {
   val junit = "junit" % "junit" % "4.1" % "test"
   val scalaTest = "org.scalatest" % "scalatest" % "1.2" % "test"
   val testDeps = Seq(easymock, junit, scalaTest) 
+
+  // Apache Rat
+  val apacheRat = "org.apache.rat" % "apache-rat" % "0.8" intransitive()
 }
 
 object KafkaBuild extends Build {
@@ -59,7 +62,12 @@ object KafkaBuild extends Build {
 
   lazy val root = Project(
     id = "root", 
-    base = file(".")
+    base = file("."),
+    settings = Defaults.defaultSettings ++ Seq(
+      libraryDependencies += apacheRat,
+
+      runRat
+    )
   ) aggregate(core, examples/*, contrib, perf*/)
 
   lazy val core = Project(
@@ -92,6 +100,18 @@ object KafkaBuild extends Build {
         <exclude module="jms"/>
       </dependencies>
     )
+
+  val runRatKey = TaskKey[Unit]("rat", "Runs Apache rat on Kafka")
+     
+  def runRat = runRatKey <<= managedClasspath.in(Compile) map { cp =>
+    // full path to apache-rat-0.8.jar
+    val ratJar = cp.collectFirst { 
+      case attr if attr.data.name.startsWith("apache-rat-") => attr.data.toString
+    } getOrElse ""
+
+    // pass the jar's path to the shell script
+    ("bin/run-rat.sh %s".format(ratJar)) !
+  }
 
 //  lazy val contrib = project("contrib", "contrib", new ContribProject(_))
 //  lazy val perf = project("perf", "perf", new KafkaPerfProject(_))
