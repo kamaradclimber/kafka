@@ -163,7 +163,7 @@ object KafkaBuild extends Build {
   lazy val standardSettings = Defaults.defaultSettings ++ Seq(
     version := "0.7",
 
-    scalaVersion := "2.8.0"
+    scalaVersion := "2.9.2"
   )
 
   lazy val ivyExclusions = Seq(
