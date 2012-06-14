@@ -10,6 +10,7 @@ project/sbt_project_definition.iml
 .svn
 .classpath
 rat.out
+.history
 *~
 *#
 .#*

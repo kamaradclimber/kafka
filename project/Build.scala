@@ -68,66 +68,105 @@ object KafkaBuild extends Build {
   lazy val root = Project(
     id = "root", 
     base = file("."),
-    settings = Defaults.defaultSettings ++ Seq(
+    settings = standardSettings ++ Seq(
+      name := "kafka", 
+
       libraryDependencies += apacheRat,
+      
+      publishArtifact in (Compile, packageBin) := false,
 
       runRat
     )
   ) aggregate(core, examples, contrib, perf)
 
-  lazy val core = Project(
+  lazy val core: Project = Project(
     id = "core-kafka", 
     base = file("core"), 
-    settings = standardSettings ++ Seq(
+    settings = standardSettings ++ ivyExclusions ++ Seq(
+      name := "kafka",
+
       libraryDependencies ++= coreDeps,
       libraryDependencies ++= testDeps,
       libraryDependencies ++= compressionDeps,
-      libraryDependencies ++= zkDeps
+      libraryDependencies ++= zkDeps,
+
+      // e.g. "kafka-0.7.jar"
+      artifactName := { (config: String, module: ModuleID, artifact: Artifact) =>
+        artifact.name + "-" + module.revision + "." + artifact.extension
+      },
+
+      javacOptions ++= Seq("-source", "1.5")
     )
   )
 
-  lazy val examples = Project(
+  lazy val examples: Project = Project(
     id = "java-examples",
     base = file("examples"),
-    settings = standardSettings ++ Seq(
-      libraryDependencies ++= coreDeps
+    settings = standardSettings ++ ivyExclusions ++ Seq(
+      name := "kafka-java-examples",
+
+      libraryDependencies ++= coreDeps,
+
+      // e.g. "kafka-java-examples-0.7.jar"
+      artifactName := { (config: String, module: ModuleID, artifact: Artifact) =>
+        artifact.name + "-" + module.revision + "." + artifact.extension
+      },
+
+      javacOptions += "-Xlint:unchecked"
     )
   ) dependsOn(core)
 
-  lazy val perf = Project(
+  lazy val perf: Project = Project(
     id = "perf",
     base = file("perf"),
-    settings = standardSettings ++ Seq(
-      libraryDependencies ++= coreDeps
+    settings = standardSettings ++ ivyExclusions ++ Seq(
+      name := "kafka-perf",
+
+      libraryDependencies ++= coreDeps,
+
+      // e.g. "kafka-perf-0.7.jar"
+      artifactName := { (config: String, module: ModuleID, artifact: Artifact) =>
+        artifact.name + "-" + module.revision + "." + artifact.extension
+      },
+
+      javacOptions += "-Xlint:unchecked"
     )
   ) dependsOn(core)
 
-  lazy val contrib = Project(
+  lazy val contrib: Project = Project(
     id = "contrib",
-    base = file("contrib")
+    base = file("contrib"),
+    settings = standardSettings ++ Seq(
+      publishArtifact in (Compile, packageBin) := false
+    )
   ) aggregate (hadoopProducer, hadoopConsumer)
 
-  lazy val hadoopProducer = Project(
+  lazy val hadoopProducer: Project = Project(
     id = "hadoop-producer",
     base = file("contrib/hadoop-producer"),
-    settings = standardSettings ++ Seq(
+    settings = standardSettings ++ ivyExclusions ++ Seq(
       libraryDependencies ++= coreDeps,
       libraryDependencies ++= hadoopDeps
     )
   ) dependsOn(core)
 
-  lazy val hadoopConsumer = Project(
+  lazy val hadoopConsumer: Project = Project(
     id = "hadoop-consumer",
     base = file("contrib/hadoop-consumer"),
-    settings = standardSettings ++ Seq(
+    settings = standardSettings ++ ivyExclusions ++ Seq(
       libraryDependencies ++= coreDeps,
       libraryDependencies ++= hadoopDeps,
       libraryDependencies += jodaTime
     ) 
   ) dependsOn(core)
 
-  lazy val standardSettings = Project.defaultSettings ++ Seq(
-    scalaVersion := "2.8.0",
+  lazy val standardSettings = Defaults.defaultSettings ++ Seq(
+    version := "0.7",
+
+    scalaVersion := "2.8.0"
+  )
+
+  lazy val ivyExclusions = Seq(
     ivyXML := 
       <dependencies>
         <exclude module="javax"/>
@@ -136,7 +175,7 @@ object KafkaBuild extends Build {
         <exclude module="mail"/>
         <exclude module="jms"/>
       </dependencies>
-    )
+  )
 
   val runRatKey = TaskKey[Unit]("rat", "Runs Apache rat on Kafka")
      
