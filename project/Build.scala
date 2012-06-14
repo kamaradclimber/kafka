@@ -32,7 +32,9 @@ object Dependencies {
   val commonsLogging = "commons-logging" % "commons-logging" % "1.0.4"
   val jacksonCore = "org.codehaus.jackson" % "jackson-core-asl" % "1.5.5"
   val jacksonMapper = "org.codehaus.jackson" % "jackson-mapper-asl" % "1.5.5"
-  val hadoop = "org.apache.hadoop" % "hadoop-core" % "0.20.2"
+  val hadoop = "org.apache.hadoop" % "hadoop-core" % "0.20.2" excludeAll(
+    ExclusionRule(name="junit")
+  )
   val hadoopDeps = Seq(avro, commonsLogging, jacksonCore, jacksonMapper, hadoop)
   
   // Compression
@@ -55,6 +57,9 @@ object Dependencies {
 
   // Apache Rat
   val apacheRat = "org.apache.rat" % "apache-rat" % "0.8" intransitive()
+
+  // Joda Time
+  val jodaTime = "joda-time" % "joda-time" % "1.6"
 }
 
 object KafkaBuild extends Build {
@@ -68,7 +73,7 @@ object KafkaBuild extends Build {
 
       runRat
     )
-  ) aggregate(core, examples/*, contrib, perf*/)
+  ) aggregate(core, examples, contrib, perf)
 
   lazy val core = Project(
     id = "core-kafka", 
@@ -87,6 +92,38 @@ object KafkaBuild extends Build {
     settings = standardSettings ++ Seq(
       libraryDependencies ++= coreDeps
     )
+  ) dependsOn(core)
+
+  lazy val perf = Project(
+    id = "perf",
+    base = file("perf"),
+    settings = standardSettings ++ Seq(
+      libraryDependencies ++= coreDeps
+    )
+  ) dependsOn(core)
+
+  lazy val contrib = Project(
+    id = "contrib",
+    base = file("contrib")
+  ) aggregate (hadoopProducer, hadoopConsumer)
+
+  lazy val hadoopProducer = Project(
+    id = "hadoop-producer",
+    base = file("contrib/hadoop-producer"),
+    settings = standardSettings ++ Seq(
+      libraryDependencies ++= coreDeps,
+      libraryDependencies ++= hadoopDeps
+    )
+  ) dependsOn(core)
+
+  lazy val hadoopConsumer = Project(
+    id = "hadoop-consumer",
+    base = file("contrib/hadoop-consumer"),
+    settings = standardSettings ++ Seq(
+      libraryDependencies ++= coreDeps,
+      libraryDependencies ++= hadoopDeps,
+      libraryDependencies += jodaTime
+    ) 
   ) dependsOn(core)
 
   lazy val standardSettings = Project.defaultSettings ++ Seq(
