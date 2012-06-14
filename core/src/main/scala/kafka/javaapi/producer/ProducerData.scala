@@ -16,7 +16,7 @@
 */
 package kafka.javaapi.producer
 
-import scala.collection.JavaConversions._
+import scala.collection.JavaConverters._
 
 class ProducerData[K, V](private val topic: String,
                          private val key: K,
@@ -24,7 +24,7 @@ class ProducerData[K, V](private val topic: String,
 
   def this(t: String, d: java.util.List[V]) = this(topic = t, key = null.asInstanceOf[K], data = d)
 
-  def this(t: String, d: V) = this(topic = t, key = null.asInstanceOf[K], data = asList(List(d)))
+  def this(t: String, d: V) = this(topic = t, key = null.asInstanceOf[K], data = List(d).asJava)
 
   def getTopic: String = topic
 

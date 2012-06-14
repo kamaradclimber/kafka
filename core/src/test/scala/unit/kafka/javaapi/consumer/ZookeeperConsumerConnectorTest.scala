@@ -24,7 +24,7 @@ import kafka.server.KafkaConfig
 import kafka.utils.{Utils, Logging}
 import kafka.utils.{TestZKUtils, TestUtils}
 import org.scalatest.junit.JUnit3Suite
-import scala.collection.JavaConversions._
+import scala.collection.JavaConverters._
 import kafka.javaapi.message.ByteBufferMessageSet
 import org.apache.log4j.{Level, Logger}
 import kafka.message.{NoCompressionCodec, CompressionCodec, Message}
@@ -95,9 +95,9 @@ class ZookeeperConsumerConnectorTest extends JUnit3Suite with KafkaServerTestHar
   def getMessages(nMessagesPerThread: Int, jTopicMessageStreams: java.util.Map[String, java.util.List[KafkaStream[Message]]])
   : List[Message]= {
     var messages: List[Message] = Nil
-    val topicMessageStreams = asMap(jTopicMessageStreams)
+    val topicMessageStreams = jTopicMessageStreams.asScala
     for ((topic, messageStreams) <- topicMessageStreams) {
-      for (messageStream <- messageStreams) {
+      for (messageStream <- messageStreams.asScala) {
         val iterator = messageStream.iterator
         for (i <- 0 until nMessagesPerThread) {
           assertTrue(iterator.hasNext)

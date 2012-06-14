@@ -109,10 +109,10 @@ class ZKLoadBalanceTest extends JUnit3Suite with ZooKeeperTestHarness {
   }
 
   private def getZKChildrenValues(path : String) : Seq[Tuple2[String,String]] = {
-    import scala.collection.JavaConversions
+    import scala.collection.JavaConverters._
     val children = zkClient.getChildren(path)
     Collections.sort(children)
-    val childrenAsSeq : Seq[java.lang.String] = JavaConversions.asBuffer(children)
+    val childrenAsSeq : Seq[java.lang.String] = children.asScala
     childrenAsSeq.map(partition =>
       (partition, zkClient.readData(path + "/" + partition).asInstanceOf[String]))
   }
