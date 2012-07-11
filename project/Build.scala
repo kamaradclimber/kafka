@@ -19,7 +19,7 @@ import sbt._
 import Keys._
 import scala.xml.{Node, Elem, NodeSeq}
 import scala.xml.transform.{RewriteRule, RuleTransformer}
-
+import com.typesafe.sbteclipse.plugin.EclipsePlugin.EclipseKeys
 
 object Dependencies {
   // Core
@@ -32,12 +32,9 @@ object Dependencies {
   val commonsLogging = "commons-logging" % "commons-logging" % "1.0.4"
   val jacksonCore = "org.codehaus.jackson" % "jackson-core-asl" % "1.5.5"
   val jacksonMapper = "org.codehaus.jackson" % "jackson-mapper-asl" % "1.5.5"
-  val pig = "org.apache.pig" % "pig" % "0.8.0"  excludeAll(
-    ExclusionRule(name="junit")
-  )
-  val hadoop = "org.apache.hadoop" % "hadoop-core" % "0.20.2" excludeAll(
-    ExclusionRule(name="junit")
-  )
+  val pig = "org.apache.pig" % "pig" % "0.8.0"  exclude("junit", "junit")
+  val hadoop = "org.apache.hadoop" % "hadoop-core" % "0.20.2" exclude(
+    "junit", "junit")
   val hadoopDeps = Seq(avro, commonsLogging, jacksonCore, jacksonMapper, pig,
     hadoop)
   
@@ -47,8 +44,8 @@ object Dependencies {
 
   // ZooKeeper
   val zookeeper = "org.apache.zookeeper" % "zookeeper" % "3.3.4" excludeAll(
-    ExclusionRule(organization = "log4j"),
-    ExclusionRule(organization = "jline")
+    ExclusionRule(organization = "log4j", name = "log4j", artifact = "log4j"),
+    ExclusionRule(organization = "jline", name = "jline", artifact = "jline")
   )
   val zkClient = "com.github.sgroschupf" % "zkclient" % "0.1" intransitive()
   val zkDeps = Seq(zookeeper, zkClient)
@@ -76,8 +73,8 @@ object KafkaBuild extends Build {
       name := "kafka", 
 
       libraryDependencies += apacheRat,
-      
-      publishArtifact in (Compile, packageBin) := false,
+
+      publish := false,
 
       runRat
     )
@@ -94,14 +91,13 @@ object KafkaBuild extends Build {
       libraryDependencies ++= compressionDeps,
       libraryDependencies ++= zkDeps,
 
-      // e.g. "kafka-0.7.jar"
       artifactName := { (config: String, module: ModuleID, artifact: Artifact) =>
         artifact.name + "-" + module.revision + "." + artifact.extension
       },
 
       javacOptions ++= Seq("-source", "1.5")
     )
-  )
+)
 
   lazy val examples: Project = Project(
     id = "java-examples",
@@ -128,7 +124,6 @@ object KafkaBuild extends Build {
 
       libraryDependencies ++= coreDeps,
 
-      // e.g. "kafka-perf-0.7.jar"
       artifactName := { (config: String, module: ModuleID, artifact: Artifact) =>
         artifact.name + "-" + module.revision + "." + artifact.extension
       },
@@ -141,7 +136,7 @@ object KafkaBuild extends Build {
     id = "contrib",
     base = file("contrib"),
     settings = standardSettings ++ Seq(
-      publishArtifact in (Compile, packageBin) := false
+      publish := false
     )
   ) aggregate (hadoopProducer, hadoopConsumer)
 
@@ -161,15 +156,31 @@ object KafkaBuild extends Build {
       libraryDependencies ++= coreDeps,
       libraryDependencies ++= hadoopDeps,
       libraryDependencies += jodaTime
-    ) 
+    )
   ) dependsOn(core)
 
   lazy val standardSettings = Defaults.defaultSettings ++ Seq(
-    version := "0.7",
+    version := "0.7.1-criteo-SNAPSHOT",
 
     scalaVersion := "2.9.2",
 
-    scalacOptions += "-deprecation"
+    scalacOptions += "-deprecation",
+
+    EclipseKeys.withSource := true,
+
+    publishMavenStyle := true,
+
+    publishTo := Some(Resolver.file("file",
+      new File(Path.userHome.absolutePath+"/.m2/repository"))),
+
+    publishTo <<= version { (v: String) =>
+      val repo = "http://maven/content/repositories/criteo"
+      if (v.trim.endsWith("SNAPSHOT"))
+        Some("snapshots" at repo + ".snapshots")
+      else Some("releases"  at repo + ".releases")
+    },
+
+    credentials += Credentials(Path.userHome / ".ivy2" / ".credentials")
   )
 
   lazy val ivyExclusions = Seq(
