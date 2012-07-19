@@ -32,10 +32,14 @@ object Dependencies {
   val commonsLogging = "commons-logging" % "commons-logging" % "1.0.4"
   val jacksonCore = "org.codehaus.jackson" % "jackson-core-asl" % "1.5.5"
   val jacksonMapper = "org.codehaus.jackson" % "jackson-mapper-asl" % "1.5.5"
+  val pig = "org.apache.pig" % "pig" % "0.8.0"  excludeAll(
+    ExclusionRule(name="junit")
+  )
   val hadoop = "org.apache.hadoop" % "hadoop-core" % "0.20.2" excludeAll(
     ExclusionRule(name="junit")
   )
-  val hadoopDeps = Seq(avro, commonsLogging, jacksonCore, jacksonMapper, hadoop)
+  val hadoopDeps = Seq(avro, commonsLogging, jacksonCore, jacksonMapper, pig,
+    hadoop)
   
   // Compression
   val snappy = "org.xerial.snappy" % "snappy-java" % "1.0.4.1"	
