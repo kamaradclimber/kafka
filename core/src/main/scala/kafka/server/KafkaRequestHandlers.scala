@@ -96,7 +96,8 @@ private[kafka] class KafkaRequestHandlers(val logManager: LogManager) extends Lo
     var responses = multiFetchRequest.fetches.map(fetch =>
         readMessageSet(fetch)).toList
     
-    Some(new MultiMessageSetSend(responses))
+    val sets = DropBeforeOverflow(responses, 0)
+    Some(new MultiMessageSetSend(sets))
   }
 
   private def readMessageSet(fetchRequest: FetchRequest): MessageSetSend = {
@@ -129,6 +130,17 @@ private[kafka] class KafkaRequestHandlers(val logManager: LogManager) extends Lo
     val offsets = logManager.getOffsets(offsetRequest)
     val response = new OffsetArraySend(offsets)
     Some(response)
+  }
+  
+  def DropBeforeOverflow(sets: List[MessageSetSend], sum: Int): List[MessageSetSend] = {
+    sets match {
+      case Nil => Nil
+      case head :: tail =>
+        if (sum + head.sendSize >= sum)
+          head :: (DropBeforeOverflow(tail, sum + head.sendSize))
+        else
+          Nil
+    }
   }
 }
 
